@@ -1,5 +1,4 @@
 <template>
-  
   <div class="wrapper">
         <p>
           <RouterLink to="/Chart">普通k线图</RouterLink>
@@ -10,11 +9,11 @@
         <p>
           <RouterLink to="/ChartMark">可标记的k线图</RouterLink>
         </p>
+        <div class="w-32 h-34 bg-blue-500">
+        </div>
     </div>
 </template>
 
+<style>
 
-<script setup>
-import { onMounted, onUnmounted } from 'vue'
-import { init, dispose } from 'klinecharts'
-</script>
+</style>
