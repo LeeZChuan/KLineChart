@@ -1,10 +1,10 @@
 {
   "name": "klinechart",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "run-p type-check \"build-only {@}\" --",
+    "build": "run-p build-only",
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --noEmit -p tsconfig.app.json --composite false",
@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@klinecharts/pro": "^0.1.1",
+    "@vitejs/plugin-vue-jsx": "^4.0.0",
     "klinecharts": "^9.5.4",
     "vue": "^3.3.4",
     "vue-router": "^4.2.5"
