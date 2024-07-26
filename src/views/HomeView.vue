@@ -9,8 +9,7 @@
         <p>
           <RouterLink to="/ChartMark">可标记的k线图</RouterLink>
         </p>
-        <div class="w-32 h-34 bg-blue-500">
-        </div>
+        <p> <RouterLink to="/ZnzChart">指南针图表库</RouterLink></p>
     </div>
 </template>
 
