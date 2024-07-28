@@ -1,7 +1,7 @@
 
 <template>
   <div id="container">
-    <div id="k-line-chart" style="height:430px;width: 95vw;" />
+    <div id="k-line-chart" style="height:530px;width: 95vw;" />
   </div>
 </template>
   
@@ -148,7 +148,8 @@ removesubTitle.addEventListener('click', () => { removeSubIndicator() })
 buttonContainer.appendChild(removesubTitle)
 
 container.appendChild(buttonContainer)
-
+// document.getElementById('k-line-chart').style.backgroundColor = '#1b1b1f'
+chart.setStyles('dark')
 });
 
 </script>

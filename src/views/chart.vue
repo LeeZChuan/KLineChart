@@ -2,7 +2,7 @@
 
 <template>
   <div id="container">
-    <div id="k-line-chart" style="height:430px;width: 95vw;" />
+    <div id="k-line-chart" style="height:800px;width: 95vw;" />
   </div>
 </template>
 
