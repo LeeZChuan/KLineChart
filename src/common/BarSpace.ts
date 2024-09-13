@@ -12,9 +12,10 @@
  * limitations under the License.
  */
 
+// BarSpace 接口定义，用于表示柱状图或类似结构中的间距信息
 export default interface BarSpace {
-  bar: number
-  halfBar: number
-  gapBar: number
-  halfGapBar: number
+  bar: number          // 完整的柱状图宽度
+  halfBar: number      // 柱状图宽度的一半
+  gapBar: number       // 相邻柱状图之间的间距
+  halfGapBar: number   // 间距的一半
 }

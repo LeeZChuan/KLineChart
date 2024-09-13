@@ -12,13 +12,18 @@
  * limitations under the License.
  */
 
+// Coordinate 接口：表示一个二维平面上的坐标点
 export default interface Coordinate {
-  x: number
-  y: number
+  x: number  // x 坐标
+  y: number  // y 坐标
 }
 
+// getDistance 函数：用于计算两个坐标点之间的距离
 export function getDistance (coordinate1: Coordinate, coordinate2: Coordinate): number {
+  // 计算 x 坐标的差值
   const xDif = coordinate1.x - coordinate2.x
+  // 计算 y 坐标的差值
   const yDif = coordinate1.y - coordinate2.y
+  // 使用勾股定理计算两点间的欧几里得距离
   return Math.sqrt(xDif * xDif + yDif * yDif)
 }

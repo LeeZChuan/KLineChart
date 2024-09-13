@@ -12,6 +12,8 @@
  * limitations under the License.
  */
 
+/** 表格样式定义 */
+
 import type Nullable from './Nullable'
 import { type KLineData } from './Data'
 
