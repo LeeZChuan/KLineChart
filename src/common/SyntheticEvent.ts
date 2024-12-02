@@ -109,60 +109,66 @@ interface MouseTouchMoveWithDownInfo {
   manhattanDistance: number
 }
 
-// TODO: get rid of a lot of boolean flags, probably we should replace it with some enum
+// SyntheticEvent 类用于处理各种鼠标和触摸事件
 export default class SyntheticEvent {
+  // 目标 HTML 元素
   private readonly _target: HTMLElement
+  // 事件处理器
   private readonly _handler: EventHandler
-
+  // 事件选项
   private readonly _options: EventOptions
 
+  // 点击相关变量
   private _clickCount: number = 0
   private _clickTimeoutId: Nullable<TimerId> = null
   private _clickCoordinate: Coordinate = { x: Number.NEGATIVE_INFINITY, y: Number.POSITIVE_INFINITY }
 
+  // 触摸相关变量
   private _tapCount: number = 0
   private _tapTimeoutId: Nullable<TimerId> = null
   private _tapCoordinate: Coordinate = { x: Number.NEGATIVE_INFINITY, y: Number.POSITIVE_INFINITY }
 
+  // 长按相关变量
   private _longTapTimeoutId: Nullable<TimerId> = null
   private _longTapActive: boolean = false
 
+  // 鼠标移动相关变量
   private _mouseMoveStartCoordinate: Nullable<Coordinate> = null
 
+  // 触摸移动相关变量
   private _touchMoveStartCoordinate: Nullable<Coordinate> = null
   private _touchMoveExceededManhattanDistance: boolean = false
 
+  // 取消点击和触摸标志
   private _cancelClick: boolean = false
   private _cancelTap: boolean = false
 
+  // 事件取消订阅函数
   private _unsubscribeOutsideMouseEvents: Nullable<() => void> = null
   private _unsubscribeOutsideTouchEvents: Nullable<() => void> = null
   private _unsubscribeMobileSafariEvents: Nullable<() => void> = null
-
   private _unsubscribeMousemove: Nullable<() => void> = null
-
   private _unsubscribeMouseWheel: Nullable<() => void> = null
-
   private _unsubscribeContextMenu: Nullable<() => void> = null
-
   private _unsubscribeRootMouseEvents: Nullable<() => void> = null
   private _unsubscribeRootTouchEvents: Nullable<() => void> = null
 
+  // 捏合缩放相关变量
   private _startPinchMiddleCoordinate: Nullable<Coordinate> = null
   private _startPinchDistance: number = 0
   private _pinchPrevented: boolean = false
   private _preventTouchDragProcess: boolean = false
 
+  // 鼠标按下标志
   private _mousePressed: boolean = false
 
+  // 最后一次触摸事件时间戳
   private _lastTouchEventTimeStamp: number = 0
 
-  // for touchstart/touchmove/touchend events we handle only first touch
-  // i.e. we don't support several active touches at the same time (except pinch event)
+  // 当前活动的触摸 ID
   private _activeTouchId: Nullable<number> = null
 
-  // accept all mouse leave events if it's not an iOS device
-  // see _mouseEnterHandler, _mouseMoveHandler, _mouseLeaveHandler
+  // 是否接受鼠标离开事件
   private _acceptMouseLeave: boolean = !isIOS()
 
   constructor (
@@ -177,6 +183,7 @@ export default class SyntheticEvent {
     this._init()
   }
 
+  // 销毁方法，清理所有事件监听器
   destroy (): void {
     if (this._unsubscribeOutsideMouseEvents !== null) {
       this._unsubscribeOutsideMouseEvents()
@@ -222,6 +229,7 @@ export default class SyntheticEvent {
     this._resetClickTimeout()
   }
 
+  // 鼠标进入处理器
   private _mouseEnterHandler (enterEvent: MouseEvent): void {
     this._unsubscribeMousemove?.()
     this._unsubscribeMouseWheel?.()
@@ -253,6 +261,7 @@ export default class SyntheticEvent {
     this._acceptMouseLeave = true
   }
 
+  // 重置点击超时
   private _resetClickTimeout (): void {
     if (this._clickTimeoutId !== null) {
       clearTimeout(this._clickTimeoutId)
@@ -263,6 +272,7 @@ export default class SyntheticEvent {
     this._clickCoordinate = { x: Number.NEGATIVE_INFINITY, y: Number.POSITIVE_INFINITY }
   }
 
+  // 重置触摸超时
   private _resetTapTimeout (): void {
     if (this._tapTimeoutId !== null) {
       clearTimeout(this._tapTimeoutId)
@@ -273,6 +283,7 @@ export default class SyntheticEvent {
     this._tapCoordinate = { x: Number.NEGATIVE_INFINITY, y: Number.POSITIVE_INFINITY }
   }
 
+  // 鼠标移动处理器
   private _mouseMoveHandler (moveEvent: MouseEvent): void {
     if (this._mousePressed || this._touchMoveStartCoordinate !== null) {
       return
@@ -286,6 +297,7 @@ export default class SyntheticEvent {
     this._acceptMouseLeave = true
   }
 
+  // 鼠标滚轮处理器
   private _mouseWheelHandler (wheelEvent: WheelEvent): void {
     if (Math.abs(wheelEvent.deltaX) > Math.abs(wheelEvent.deltaY)) {
       if (!isValid(this._handler.mouseWheelHortEvent)) {
@@ -327,6 +339,7 @@ export default class SyntheticEvent {
     this._preventDefault(mouseEvent)
   }
 
+  // 触摸移动处理器
   private _touchMoveHandler (moveEvent: TouchEvent): void {
     const touch = this._touchWithId(moveEvent.changedTouches, this._activeTouchId)
     if (touch === null) {
@@ -387,6 +400,7 @@ export default class SyntheticEvent {
     }
   }
 
+  // 鼠标按下移动处理器
   private _mouseMoveWithDownHandler (moveEvent: MouseEvent): void {
     if (moveEvent.button !== MouseEventButton.Left) {
       return
@@ -406,6 +420,7 @@ export default class SyntheticEvent {
     }
   }
 
+  // 计算鼠标/触摸移动的信息
   private _mouseTouchMoveWithDownInfo (currentCoordinate: Coordinate, startCoordinate: Coordinate): MouseTouchMoveWithDownInfo {
     const xOffset = Math.abs(startCoordinate.x - currentCoordinate.x)
     const yOffset = Math.abs(startCoordinate.y - currentCoordinate.y)
@@ -415,22 +430,12 @@ export default class SyntheticEvent {
     return { xOffset, yOffset, manhattanDistance }
   }
 
-  /**
-   * In Firefox mouse events dont't fire if the mouse position is outside of the browser's border.
-   * To prevent the mouse from hanging while pressed we're subscribing on the mouseleave event of the document element.
-   * We're subscribing on mouseleave, but this event is actually fired on mouseup outside of the browser's border.
-   */
+  // Firefox 浏览器外部鼠标抬起处理
   private readonly _onFirefoxOutsideMouseUp = (mouseUpEvent: MouseEvent): void => {
     this._mouseUpHandler(mouseUpEvent)
   }
 
-  /**
-   * Safari doesn't fire touchstart/mousedown events on double tap since iOS 13.
-   * There are two possible solutions:
-   * 1) Call preventDefault in touchEnd handler. But it also prevents click event from firing.
-   * 2) Add listener on dblclick event that fires with the preceding mousedown/mouseup.
-   * https://developer.apple.com/forums/thread/125073
-   */
+  // 移动 Safari 双击处理
   private readonly _onMobileSafariDoubleClick = (dblClickEvent: MouseEvent): void => {
     if (this._firesTouchEvents(dblClickEvent)) {
       ++this._tapCount
@@ -455,7 +460,7 @@ export default class SyntheticEvent {
     }
   }
 
-  // eslint-disable-next-line complexity
+  // 触摸结束处理器
   private _touchEndHandler (touchEndEvent: TouchEvent): void {
     let touch = this._touchWithId(touchEndEvent.changedTouches, this._activeTouchId)
     if (touch === null && touchEndEvent.touches.length === 0) {
@@ -516,6 +521,7 @@ export default class SyntheticEvent {
     }
   }
 
+  // 鼠标抬起处理器
   private _mouseUpHandler (mouseUpEvent: MouseEvent): void {
     if (mouseUpEvent.button !== MouseEventButton.Left) {
       return
@@ -566,6 +572,7 @@ export default class SyntheticEvent {
     this._longTapTimeoutId = null
   }
 
+  // 触摸开始处理器
   private _touchStartHandler (downEvent: TouchEvent): void {
     if (this._activeTouchId !== null) {
       return
@@ -613,6 +620,7 @@ export default class SyntheticEvent {
     }
   }
 
+  // 鼠标按下处理器
   private _mouseDownHandler (downEvent: MouseEvent): void {
     if (downEvent.button === MouseEventButton.Right) {
       this._preventDefault(downEvent)
@@ -666,6 +674,7 @@ export default class SyntheticEvent {
     }
   }
 
+  // 初始化方法
   private _init (): void {
     this._target.addEventListener('mouseenter', this._mouseEnterHandler.bind(this))
 
@@ -734,6 +743,7 @@ export default class SyntheticEvent {
     this._target.addEventListener('touchmove', () => {}, { passive: false })
   }
 
+  // 初始化捏合缩放
   private _initPinch (): void {
     if (!isValid(this._handler.pinchStartEvent) &&
       !isValid(this._handler.pinchEvent) &&
@@ -769,6 +779,7 @@ export default class SyntheticEvent {
     })
   }
 
+  // 检查捏合状态
   private _checkPinchState (touches: TouchList): void {
     if (touches.length === 1) {
       this._pinchPrevented = false
@@ -781,6 +792,7 @@ export default class SyntheticEvent {
     }
   }
 
+  // 开始捏合
   private _startPinch (touches: TouchList): void {
     const box = this._target.getBoundingClientRect() ?? { left: 0, top: 0 }
     this._startPinchMiddleCoordinate = {
@@ -797,6 +809,7 @@ export default class SyntheticEvent {
     this._clearLongTapTimeout()
   }
 
+  // 停止捏合
   private _stopPinch (): void {
     if (this._startPinchMiddleCoordinate === null) {
       return
@@ -809,6 +822,7 @@ export default class SyntheticEvent {
     }
   }
 
+  // 鼠标离开处理器
   private _mouseLeaveHandler (event: MouseEvent): void {
     this._unsubscribeMousemove?.()
     this._unsubscribeMouseWheel?.()
@@ -830,6 +844,7 @@ export default class SyntheticEvent {
     this._acceptMouseLeave = !isIOS()
   }
 
+  // 长按处理器
   private _longTapHandler (event: TouchEvent): void {
     const touch = this._touchWithId(event.touches, this._activeTouchId)
     if (touch === null) {
@@ -843,6 +858,7 @@ export default class SyntheticEvent {
     this._longTapActive = true
   }
 
+  // 检查是否触发触摸事件
   private _firesTouchEvents (e: MouseEvent): boolean {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-expect-error
@@ -855,10 +871,12 @@ export default class SyntheticEvent {
     return this._eventTimeStamp(e) < this._lastTouchEventTimeStamp + Delay.PreventFiresTouchEvents
   }
 
+  // 处理事件
   private _processEvent (event: MouseTouchEvent, callback?: MouseTouchEventCallback): void {
     callback?.call(this._handler, event)
   }
 
+  // 创建兼容的事件对象
   private _makeCompatEvent (event: MouseEvent | TouchEvent, touch?: Touch): MouseTouchEvent {
     // TouchEvent has no clientX/Y coordinates:
     // We have to use the last Touch instead
@@ -881,18 +899,21 @@ export default class SyntheticEvent {
     }
   }
 
+  // 获取两个触摸点之间的距离
   private _getTouchDistance (p1: Touch, p2: Touch): number {
     const xDiff = p1.clientX - p2.clientX
     const yDiff = p1.clientY - p2.clientY
     return Math.sqrt(xDiff * xDiff + yDiff * yDiff)
   }
 
+  // 阻止默认事件
   private _preventDefault (event: Event): void {
     if (event.cancelable) {
       event.preventDefault()
     }
   }
 
+  // 获取坐标
   private _getCoordinate (eventLike: Touch | MouseEvent): Coordinate {
     return {
       x: eventLike.pageX,
@@ -900,11 +921,13 @@ export default class SyntheticEvent {
     }
   }
 
+  // 获取事件时间戳
   private _eventTimeStamp (e: TouchEvent | MouseEvent): number {
     // for some reason e.timestamp is always 0 on iPad with magic mouse, so we use performance.now() as a fallback
     return e.timeStamp ?? performance.now()
   }
 
+  // 根据 ID 获取触摸点
   private _touchWithId (touches: TouchList, id: Nullable<number>): Nullable<Touch> {
     for (let i = 0; i < touches.length; ++i) {
       if (touches[i].identifier === id) {
